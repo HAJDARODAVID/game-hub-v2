@@ -1,0 +1,51 @@
+// Navbar: text logo + main menu (components/app-text-logo, components/menu/main-menu)
+.text-logo {
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    color: $white;
+
+    &:hover,
+    &:focus {
+        color: $white;
+    }
+
+    &__hub {
+        margin-left: 2px;
+        padding: 0 4px;
+        border-radius: $border-radius;
+        background-color: $gh-orange;
+        color: $black;
+    }
+}
+
+.menu-toggle {
+    border-radius: 0;
+}
+
+.main-menu {
+    --bs-dropdown-bg: #{$dark};
+    --bs-dropdown-link-color: #{$white};
+    --bs-dropdown-link-hover-bg: #{$gh-card-header};
+    --bs-dropdown-link-hover-color: #{$white};
+    --bs-dropdown-link-active-bg: #{$gh-card-header};
+    border-radius: 0;
+    padding: 0;
+
+    .dropdown-item {
+        padding-block: .5rem;
+        border-bottom: 1px solid rgba($white, .15);
+        color: $white;
+
+        &:last-child {
+            border-bottom: 0;
+        }
+
+        &:hover {
+            background-color: $gh-card-header;
+        }
+    }
+
+    &--phone {
+        background-color: $dark;
+    }
+}

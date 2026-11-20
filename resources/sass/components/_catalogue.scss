@@ -1,0 +1,41 @@
+// Games catalogue (components/games-catalogue/*)
+.catalogue {
+    border-radius: 0;
+    background-color: $dark;
+    color: $white;
+
+    > .card-header {
+        background-color: $gh-panel;
+        color: $white;
+    }
+}
+
+.game-card {
+    height: 140px;
+    background-color: $dark;
+    color: $white;
+    transition: transform .15s ease, box-shadow .15s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 0 2px $gh-orange;
+        color: $white;
+    }
+
+    > .card-header {
+        background-color: $gh-card-header;
+        color: $white;
+    }
+
+    &__cover {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        background-color: $gh-card-body;
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+        font-size: 2.5rem;
+        color: rgba($white, .25);
+    }
+}

@@ -23,6 +23,12 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        // Placeholder catalogue until games live in the database.
+        $games = [
+            ['title' => 'Scotland Yard', 'name' => 'scotland-yard', 'cover' => 'scotland-yard'],
+            ['title' => 'Toe Tac Tic', 'name' => 'toe-tac-tic', 'cover' => null],
+        ];
+
+        return view('home', compact('games'));
     }
 }

@@ -1,0 +1,8 @@
+// Phone footer (components/footer/phone-footer)
+
+// Keep page content clear of the fixed phone footer
+@include media-breakpoint-down(md) {
+    .app-body main {
+        padding-bottom: 4.5rem !important;
+    }
+}
