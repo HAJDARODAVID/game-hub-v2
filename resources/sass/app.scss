@@ -7,3 +7,33 @@
 // Bootstrap
 @import 'bootstrap/scss/bootstrap';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
+
+// Auth pages (login, register)
+.auth-body {
+    background-color: #000;
+}
+
+.auth-card {
+    border: none;
+
+    .card-body {
+        background-color: rgb(18, 18, 19);
+    }
+
+    // Square, borderless controls like the original game-hub look
+    .btn,
+    .form-control,
+    .input-group-text {
+        border-radius: 0 !important;
+    }
+
+    .form-control {
+        border: 0;
+    }
+
+    .input-group-text {
+        background-color: $dark;
+        border-color: $dark;
+        color: $white;
+    }
+}
