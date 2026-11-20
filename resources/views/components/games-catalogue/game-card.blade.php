@@ -1,19 +1,13 @@
 @props(['game'])
 
-@php
-    $cover = !empty($game['cover']) && file_exists(public_path('img/games/catalogue/' . $game['cover'] . '.png'))
-        ? asset('img/games/catalogue/' . $game['cover'] . '.png')
-        : null;
-@endphp
-
-{{-- Links to "#" until game pages exist --}}
-<a href="{{ $game['url'] ?? '#' }}" class="card game-card text-decoration-none">
-    <div class="card-header">
-        {{ mb_strtoupper($game['title']) }}
+<a href="{{ route('games.lobby', $game) }}" class="card game-card text-decoration-none">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>{{ mb_strtoupper($game->title) }}</span>
+        <span class="game-card__players"><i class="bi bi-people me-1"></i>{{ $game->max_players }}</span>
     </div>
 
-    <div class="card-body game-card__cover" @if ($cover) style="background-image: url('{{ $cover }}')" @endif>
-        @unless ($cover)
+    <div class="card-body game-card__cover" @if ($game->cover_url) style="background-image: url('{{ $game->cover_url }}')" @endif>
+        @unless ($game->cover_url)
             <i class="bi bi-controller"></i>
         @endunless
     </div>

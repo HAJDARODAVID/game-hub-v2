@@ -1,4 +1,4 @@
-@props(['games' => []])
+@props(['games'])
 
 <div class="card catalogue">
     <div class="card-header">
@@ -6,7 +6,7 @@
     </div>
 
     <div class="card-body">
-        @if (count($games))
+        @if ($games->isNotEmpty())
             <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
                 @foreach ($games as $game)
                     <div class="col">

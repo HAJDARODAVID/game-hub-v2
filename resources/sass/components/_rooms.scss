@@ -1,0 +1,30 @@
+// Rooms: lobby room list + waiting room (livewire/lobby/rooms, livewire/rooms/show)
+.room-row {
+    padding: .75rem 1rem;
+    border-bottom: 1px solid rgba($white, .08);
+
+    &:last-child {
+        border-bottom: 0;
+    }
+
+    .seat {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        background-color: $gh-card-header;
+        color: rgba($white, .7);
+        font-size: .8rem;
+    }
+}
+
+.invite-banner {
+    padding: .75rem 1rem;
+    background-color: $gh-panel;
+    border-left: 3px solid $gh-orange;
+}
+
+.min-w-0 {
+    min-width: 0;
+}

@@ -39,3 +39,15 @@
         color: rgba($white, .25);
     }
 }
+
+.game-card__players {
+    font-size: .8rem;
+    color: rgba($white, .6);
+}
+
+// Primary call-to-action in the brand orange
+.btn-gh-orange {
+    @include button-variant($gh-orange, $gh-orange, $color: $black, $hover-color: $black);
+    border-radius: 0;
+    font-weight: 700;
+}
