@@ -2,6 +2,7 @@
 
 namespace App\Actions\Rooms;
 
+use App\Broadcasting\RoomEvents;
 use App\Enums\RoomStatus;
 use App\Models\Room;
 use App\Models\RoomInvite;
@@ -51,10 +52,14 @@ class InvitePlayer extends RoomAction
                 $this->fail('username', __('The room is full (pending invites count too).'));
             }
 
-            return $room->invites()->create([
+            $invite = $room->invites()->create([
                 'inviter_id' => $host->id,
                 'invitee_id' => $invitee->id,
             ]);
+
+            RoomEvents::changed($room);   // the invitee is a pending invitee now, so they're notified too
+
+            return $invite;
         });
     }
 }

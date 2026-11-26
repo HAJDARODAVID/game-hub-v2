@@ -3,6 +3,7 @@
 namespace App\Actions\Matches;
 
 use App\Actions\Rooms\RoomAction;
+use App\Broadcasting\RoomEvents;
 use App\Enums\RoomStatus;
 use App\Models\GameMatch;
 use App\Models\Room;
@@ -46,6 +47,8 @@ class RequestRematch extends RoomAction
             $playerIds = $room->players()->pluck('user_id')->map(fn ($id) => (int) $id)->all();
 
             if (array_diff($playerIds, $votes) !== []) {
+                RoomEvents::roomOnly($room);   // the others see "… wants a rematch!"
+
                 return null;   // still waiting for someone
             }
 

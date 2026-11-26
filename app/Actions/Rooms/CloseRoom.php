@@ -2,6 +2,7 @@
 
 namespace App\Actions\Rooms;
 
+use App\Broadcasting\RoomEvents;
 use App\Enums\InviteStatus;
 use App\Enums\MatchStatus;
 use App\Enums\RoomStatus;
@@ -37,10 +38,13 @@ class CloseRoom extends RoomAction
 
             $room->update(['status' => RoomStatus::Closed, 'closed_at' => now()]);
 
+            $cancelledInvitees = $room->invites()->pending()->pluck('invitee_id');
             $room->invites()->pending()->update([
                 'status' => InviteStatus::Cancelled,
                 'responded_at' => now(),
             ]);
+
+            RoomEvents::changed($room, $cancelledInvitees);
         });
     }
 

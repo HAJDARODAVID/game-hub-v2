@@ -3,6 +3,7 @@
 namespace App\Actions\Matches;
 
 use App\Actions\Rooms\RoomAction;
+use App\Broadcasting\RoomEvents;
 use App\Enums\InviteStatus;
 use App\Enums\MatchStatus;
 use App\Enums\RoomStatus;
@@ -72,10 +73,13 @@ class StartMatch extends RoomAction
         ]);
 
         // Nobody can join a running game
+        $cancelledInvitees = $room->invites()->pending()->pluck('invitee_id');
         $room->invites()->pending()->update([
             'status' => InviteStatus::Cancelled,
             'responded_at' => now(),
         ]);
+
+        RoomEvents::changed($room, $cancelledInvitees);
 
         return $match;
     }

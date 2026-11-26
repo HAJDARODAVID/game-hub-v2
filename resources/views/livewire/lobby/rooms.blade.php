@@ -1,5 +1,5 @@
-{{-- Polls until real-time updates (Reverb) are added --}}
-<div class="d-flex flex-column gap-3" wire:poll.10s>
+{{-- Updates arrive in real time (Reverb); slow polling is only a safety net --}}
+<div class="d-flex flex-column gap-3" wire:poll.60s>
     {{-- Header on one row: back · title + description (truncated if needed) · create room --}}
     <div class="d-flex align-items-center gap-3">
         <a href="{{ route('home') }}" class="btn btn-dark btn-sm flex-shrink-0" aria-label="{{ __('Back to catalogue') }}">

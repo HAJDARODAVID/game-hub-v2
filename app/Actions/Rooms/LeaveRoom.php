@@ -2,6 +2,7 @@
 
 namespace App\Actions\Rooms;
 
+use App\Broadcasting\RoomEvents;
 use App\Enums\RoomStatus;
 use App\Models\Room;
 use App\Models\User;
@@ -22,5 +23,7 @@ class LeaveRoom extends RoomAction
         }
 
         $room->players()->where('user_id', $user->id)->delete();
+
+        RoomEvents::changed($room, [$user->id]);
     }
 }

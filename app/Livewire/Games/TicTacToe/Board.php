@@ -14,6 +14,12 @@ use Livewire\Component;
 
 class Board extends Component
 {
+    /** Real-time: re-render on every move in this room (Reverb). */
+    protected function getListeners(): array
+    {
+        return ["echo-private:room.{$this->match->room_id},RoomUpdated" => 'refreshMatch'];
+    }
+
     #[Locked]
     public GameMatch $match;
 
@@ -48,7 +54,7 @@ class Board extends Component
         $this->notifyIfFinished();
     }
 
-    /** Called by polling until real-time updates (Reverb) are added. */
+    /** Called on every real-time room update (Reverb), and by the slow safety-net poll. */
     public function refreshMatch(): void
     {
         $this->notifyIfFinished();

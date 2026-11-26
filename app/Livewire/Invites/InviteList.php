@@ -11,6 +11,12 @@ use Livewire\Component;
 
 class InviteList extends Component
 {
+    /** Real-time: refresh when an invite arrives or goes away (Reverb). */
+    protected function getListeners(): array
+    {
+        return ['echo-private:user.' . Auth::id() . ',PlayerUpdated' => '$refresh'];
+    }
+
     /** Pending invites to me, across all games. */
     #[Computed]
     public function invites()

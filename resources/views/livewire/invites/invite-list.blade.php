@@ -1,5 +1,5 @@
-{{-- Polls until real-time updates (Reverb) are added --}}
-<div class="card catalogue" wire:poll.10s>
+{{-- Updates arrive in real time (Reverb); slow polling is only a safety net --}}
+<div class="card catalogue" wire:poll.60s>
     <div class="card-header">{{ mb_strtoupper(__('My invites')) }}</div>
 
     <div class="card-body p-0">

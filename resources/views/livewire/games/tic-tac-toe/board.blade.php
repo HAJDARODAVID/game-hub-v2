@@ -1,5 +1,5 @@
-{{-- Polls while the match runs, until real-time updates (Reverb) are added --}}
-<div class="card catalogue mb-3" @if ($match->isPlaying()) wire:poll.2s="refreshMatch" @endif>
+{{-- Moves arrive in real time (Reverb); slow polling while the match runs is only a safety net --}}
+<div class="card catalogue mb-3" @if ($match->isPlaying()) wire:poll.30s="refreshMatch" @endif>
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>{{ mb_strtoupper(__('Game')) }}</span>
         <span class="ttt-status @if ($myTurn) ttt-status--mine @endif">

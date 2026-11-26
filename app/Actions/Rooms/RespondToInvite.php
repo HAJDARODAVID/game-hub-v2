@@ -2,6 +2,7 @@
 
 namespace App\Actions\Rooms;
 
+use App\Broadcasting\RoomEvents;
 use App\Enums\InviteStatus;
 use App\Enums\RoomStatus;
 use App\Models\Room;
@@ -38,6 +39,8 @@ class RespondToInvite extends RoomAction
 
             $invite->update(['status' => InviteStatus::Accepted, 'responded_at' => now()]);
 
+            RoomEvents::changed($room);
+
             return $room;
         });
     }
@@ -52,6 +55,9 @@ class RespondToInvite extends RoomAction
         RoomInvite::whereKey($invite->id)
             ->pending()
             ->update(['status' => InviteStatus::Declined, 'responded_at' => now()]);
+
+        // No longer a pending invitee, so name them explicitly
+        RoomEvents::changed($invite->room_id, [$user->id]);
     }
 
     private function ensureInvitee(RoomInvite $invite, User $user): void

@@ -1,6 +1,5 @@
-{{-- Polls so the button appears when a match starts, until real-time updates (Reverb) are added.
-     (Not ".visible": the wrapper is empty when there's no match, so it would never count as visible.) --}}
-<div class="d-flex" wire:poll.15s>
+{{-- Appears in real time (Reverb). Slow polling is a safety net (not ".visible": the wrapper is empty when there is no match) --}}
+<div class="d-flex" wire:poll.60s>
     @if ($this->room && $this->room->id !== $currentRoomId)
         <a href="{{ route('rooms.show', $this->room) }}" class="{{ $linkClass }} active-match-btn"
             aria-label="{{ __('Back to your game in :room', ['room' => $this->room->name]) }}"

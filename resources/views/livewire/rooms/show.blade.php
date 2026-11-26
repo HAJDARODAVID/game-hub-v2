@@ -1,6 +1,6 @@
 @use('App\Enums\RoomStatus')
-{{-- Polls until the room is closed (players may wait for a rematch), until real-time updates (Reverb) are added --}}
-<div @if ($room->status !== RoomStatus::Closed) wire:poll.5s @endif>
+{{-- Updates arrive in real time (Reverb); slow polling until the room closes is only a safety net --}}
+<div @if ($room->status !== RoomStatus::Closed) wire:poll.30s @endif>
     <div class="d-flex align-items-center gap-3 mb-3">
         <a href="{{ route('games.lobby', $room->game) }}" class="btn btn-dark btn-sm" aria-label="{{ __('Back to lobby') }}">
             <i class="bi bi-arrow-left"></i>

@@ -1,7 +1,8 @@
 # Deploying Reverb (real-time updates) on a LAMP server
 
-> **Status:** Reverb is **not installed yet**. The lobby and rooms currently poll every 5–10 seconds.
-> Use this guide once Reverb is added (`php artisan install:broadcasting`).
+> **Status:** Reverb is **installed and used** for real-time updates (rooms, moves, invites, lobby, footer).
+> Events are sent immediately (`ShouldBroadcastNow`), so **no queue worker is needed for real-time**.
+> If Reverb is down the game still works: changes are saved, a warning is logged, and pages catch up through slow fallback polling (30–60 s).
 
 ## What Reverb is and why it needs extra setup
 
@@ -9,9 +10,9 @@ Reverb is Laravel's WebSocket server. It pushes updates (player joined, invite r
 
 A normal Laravel app is just PHP files that Apache runs on each request. Reverb is different: it's a **long-running PHP process** that keeps connections open all the time. Production therefore needs:
 
-1. **Supervisor**, to keep Reverb (and the queue worker) running and restart them after a crash or reboot.
+1. **Supervisor**, to keep Reverb running and restart it after a crash or reboot.
 2. **An Apache reverse proxy**, so browsers reach Reverb through your normal HTTPS domain.
-3. **A queue worker**, because broadcast events are queued by default and something has to process them.
+3. *(Optional)* **A queue worker**. Game Hub broadcasts immediately, so this is only needed if queued jobs/events are added later. The Supervisor example below includes one; leave the `gamehub-queue` block out if you don't need it.
 
 ```
 Browser ──wss://gamehub.example.com/app/...──▶ Apache :443 ──proxy──▶ Reverb 127.0.0.1:8080
@@ -135,9 +136,10 @@ Long-running processes keep the old code in memory until they restart. Skipping 
 
 | Symptom | Check |
 |---|---|
-| Nothing real-time works | `sudo supervisorctl status`: are both processes `RUNNING`? |
+| Nothing real-time works | `sudo supervisorctl status`: is `gamehub-reverb` `RUNNING`? |
 | Browser can't connect | DevTools → Network → **WS**: expect `wss://gamehub.example.com/app/...` with status **101**. A 404/502 means the Apache proxy rules or the proxy modules are missing. |
-| Connected, but no updates arrive | The queue worker isn't running or is failing: check `storage/logs/queue.log` and the `failed_jobs` table. |
+| Connected, but no updates arrive | Look for `Real-time update not sent (is Reverb running?)` in `storage/logs/laravel.log`: Laravel can't reach Reverb through `/apps/`. Check the `/apps/` proxy rule and the `REVERB_HOST/PORT/SCHEME` values. |
+| Channel subscription fails (403 on `/broadcasting/auth`) | The user may not view that room (see `routes/channels.php` / `RoomPolicy`), or their session expired. |
 | Errors from Reverb itself | `tail -f storage/logs/reverb.log` |
 | Change not showing after deploy | Run `php artisan reverb:restart` and `php artisan queue:restart`. |
 
@@ -145,12 +147,12 @@ Long-running processes keep the old code in memory until they restart. Skipping 
 
 ## Local development
 
-None of the above is needed locally. Run these in separate terminals:
+None of the above is needed locally. WAMP serves the site; run Reverb next to it in a terminal:
 
 ```bash
-php artisan reverb:start --debug
-php artisan queue:work
-npm run dev
+php artisan reverb:start --debug     # leave running while you develop (Ctrl+C to stop)
+npm run dev                          # or `npm run build` after JS/SCSS changes
 ```
 
 Locally `.env` uses `REVERB_HOST=localhost`, `REVERB_PORT=8080` and `REVERB_SCHEME=http`.
+On the WAMP setup, run `php artisan config:cache` after any `.env` change, and `npm run build` after changing `VITE_REVERB_*` values.

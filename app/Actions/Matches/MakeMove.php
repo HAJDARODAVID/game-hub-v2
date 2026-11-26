@@ -3,6 +3,7 @@
 namespace App\Actions\Matches;
 
 use App\Actions\Rooms\RoomAction;
+use App\Broadcasting\RoomEvents;
 use App\Enums\MatchStatus;
 use App\Enums\RoomStatus;
 use App\Games\GameRegistry;
@@ -52,6 +53,9 @@ class MakeMove extends RoomAction
             }
 
             $match->save();
+
+            // A finished match also changes the players' lobby stats and footer button
+            $match->isPlaying() ? RoomEvents::roomOnly($room) : RoomEvents::changed($room);
 
             return $match;
         });

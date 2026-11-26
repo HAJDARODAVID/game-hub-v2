@@ -17,6 +17,12 @@ use Livewire\Component;
 
 class Rooms extends Component
 {
+    /** Real-time: refresh when my rooms, invites or stats change (Reverb). */
+    protected function getListeners(): array
+    {
+        return ['echo-private:user.' . Auth::id() . ',PlayerUpdated' => '$refresh'];
+    }
+
     #[Locked]
     public Game $game;
 

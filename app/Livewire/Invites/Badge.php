@@ -12,6 +12,12 @@ use Livewire\Component;
 
 class Badge extends Component
 {
+    /** Real-time: update the count, and hide/show around matches (Reverb). */
+    protected function getListeners(): array
+    {
+        return ['echo-private:user.' . Auth::id() . ',PlayerUpdated' => '$refresh'];
+    }
+
     /** Classes for the link, so the badge can match the surrounding buttons. */
     public string $linkClass = 'btn btn-dark btn-sm';
 

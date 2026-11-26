@@ -11,6 +11,12 @@ use Livewire\Component;
 
 class ActiveButton extends Component
 {
+    /** Real-time: appear/disappear as soon as a match starts or ends (Reverb). */
+    protected function getListeners(): array
+    {
+        return ['echo-private:user.' . Auth::id() . ',PlayerUpdated' => '$refresh'];
+    }
+
     /** Classes for the link, so it can match the footer (or navbar) buttons. */
     public string $linkClass = 'btn btn-dark btn-sm';
 

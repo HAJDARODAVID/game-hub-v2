@@ -22,6 +22,12 @@ use Livewire\Component;
 
 class Show extends Component
 {
+    /** Real-time: re-render when anything in this room changes (Reverb). */
+    protected function getListeners(): array
+    {
+        return ["echo-private:room.{$this->room->id},RoomUpdated" => 'onRealtimeUpdate'];
+    }
+
     #[Locked]
     public Room $room;
 
@@ -132,6 +138,16 @@ class Show extends Component
 
         $this->room->refresh();
         unset($this->match, $this->rematch);
+    }
+
+    /**
+     * Reverb said something changed in this room. Livewire re-reads the room from the
+     * database on every request, so re-rendering is enough; hydrate() already redirects
+     * players who lost access (e.g. their invite was cancelled).
+     */
+    public function onRealtimeUpdate(): void
+    {
+        unset($this->match, $this->canStart, $this->rematch);
     }
 
     /** Dispatched by the board when a match ends. */

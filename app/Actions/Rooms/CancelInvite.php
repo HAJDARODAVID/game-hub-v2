@@ -2,6 +2,7 @@
 
 namespace App\Actions\Rooms;
 
+use App\Broadcasting\RoomEvents;
 use App\Enums\InviteStatus;
 use App\Models\RoomInvite;
 use App\Models\User;
@@ -19,5 +20,7 @@ class CancelInvite extends RoomAction
         RoomInvite::whereKey($invite->id)
             ->pending()
             ->update(['status' => InviteStatus::Cancelled, 'responded_at' => now()]);
+
+        RoomEvents::changed($invite->room_id, [$invite->invitee_id]);
     }
 }

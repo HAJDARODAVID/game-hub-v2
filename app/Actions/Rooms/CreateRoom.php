@@ -2,6 +2,7 @@
 
 namespace App\Actions\Rooms;
 
+use App\Broadcasting\RoomEvents;
 use App\Enums\RoomStatus;
 use App\Models\Game;
 use App\Models\Room;
@@ -34,6 +35,8 @@ class CreateRoom extends RoomAction
                 'seat' => 1,
                 'joined_at' => now(),
             ]);
+
+            RoomEvents::changed($room);
 
             return $room;
         });
