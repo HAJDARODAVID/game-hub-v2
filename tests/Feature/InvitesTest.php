@@ -120,7 +120,7 @@ class InvitesTest extends TestCase
             ->assertSee('2');
     }
 
-    public function test_badge_is_in_the_navbar_and_menu_links_to_the_page(): void
+    public function test_badge_is_in_the_footer_and_menu_links_to_the_page(): void
     {
         $this->actingAs($this->me)
             ->get(route('home'))

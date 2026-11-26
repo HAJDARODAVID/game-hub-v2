@@ -186,14 +186,44 @@ new class extends Component
         return $this->redirectRoute('games.lobby', $this->room->game);
     }
 
-    public function close(): void
+    /** Close the room; during a match this means leaving the game (the opponent wins). */
+    public function close()
     {
         $this->resetErrorBag();
 
         app(CloseRoom::class)->handle($this->room, Auth::user());
 
-        $this->room->refresh();
-        unset($this->pendingInvites);
+        return $this->redirectRoute('games.lobby', $this->room->game);
+    }
+
+    /**
+     * What the always-visible door icon in the header does right now, or null when there's nothing to exit.
+     *
+     * @return array{action: 'close'|'leave', label: string, confirm: string}|null
+     */
+    #[Computed]
+    public function exit(): ?array
+    {
+        if ($this->myInvite || ! $this->players->contains('user_id', Auth::id())) {
+            return null;   // invited or not seated: nothing to leave
+        }
+
+        $opponents = $this->players->reject(fn ($p) => $p->user_id === Auth::id())->map(fn ($p) => $p->user->username)->implode(', ');
+
+        return match ($this->room->status) {
+            RoomStatus::Closed => null,
+            RoomStatus::Waiting => $this->isHost
+                ? ['action' => 'close', 'label' => __('Close room'), 'confirm' => __('Close this room? Pending invites will be cancelled.')]
+                : ['action' => 'leave', 'label' => __('Leave room'), 'confirm' => __('Leave this room?')],
+            RoomStatus::Playing => [
+                'action' => 'close',
+                'label' => __('Leave game'),
+                'confirm' => $opponents !== ''
+                    ? __('Leave the game? :names wins and the room closes.', ['names' => $opponents])
+                    : __('Leave the game? The room closes.'),
+            ],
+            RoomStatus::Finished => ['action' => 'close', 'label' => __('Close room'), 'confirm' => __('Close this room?')],
+        };
     }
 };
 ?>
@@ -209,6 +239,17 @@ new class extends Component
             <small class="text-white-50">{{ $room->game->title }} · {{ __('Host') }}: {{ $room->host->username }}</small>
         </div>
         <span class="badge {{ $room->status->badge() }}">{{ $room->status->label() }}</span>
+
+        {{-- Always-visible exit: close / leave the room, or leave the game (forfeit) during a match --}}
+        @if ($exit = $this->exit)
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-0 room-exit-btn"
+                wire:click="{{ $exit['action'] }}"
+                wire:confirm="{{ $exit['confirm'] }}"
+                wire:loading.attr="disabled"
+                title="{{ $exit['label'] }}" aria-label="{{ $exit['label'] }}">
+                <i class="bi bi-door-open"></i>
+            </button>
+        @endif
     </div>
 
     @error('room')
@@ -231,26 +272,17 @@ new class extends Component
     @endif
 
     {{-- Room controls (above the game board) --}}
-    @if ($room->status === RoomStatus::Waiting && ! $this->myInvite)
-        {{-- Waiting room: host starts, others can leave --}}
+    @if ($room->status === RoomStatus::Waiting && $this->isHost)
+        {{-- Waiting room: the host starts (closing / leaving is the door icon in the header) --}}
         <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-            @if ($this->isHost)
-                <button type="button" class="btn btn-gh-orange" wire:click="startGame" wire:loading.attr="disabled" wire:target="startGame" @disabled(! $this->canStart)>
-                    <i class="bi bi-play-fill me-1"></i>{{ __('Start game') }}
-                </button>
-                @unless ($this->canStart)
-                    <small class="text-white-50">
-                        {{ $this->boardComponent ? __('Waiting for players: :count needed.', ['count' => $room->game->min_players]) : __("This game can't be played yet.") }}
-                    </small>
-                @endunless
-                <button type="button" class="btn btn-outline-danger rounded-0 ms-auto" wire:click="close" wire:confirm="{{ __('Close this room? Pending invites will be cancelled.') }}">
-                    {{ __('Close room') }}
-                </button>
-            @else
-                <button type="button" class="btn btn-outline-light rounded-0 ms-auto" wire:click="leave" wire:confirm="{{ __('Leave this room?') }}">
-                    {{ __('Leave room') }}
-                </button>
-            @endif
+            <button type="button" class="btn btn-gh-orange" wire:click="startGame" wire:loading.attr="disabled" wire:target="startGame" @disabled(! $this->canStart)>
+                <i class="bi bi-play-fill me-1"></i>{{ __('Start game') }}
+            </button>
+            @unless ($this->canStart)
+                <small class="text-white-50">
+                    {{ $this->boardComponent ? __('Waiting for players: :count needed.', ['count' => $room->game->min_players]) : __("This game can't be played yet.") }}
+                </small>
+            @endunless
         </div>
     @elseif ($room->status === RoomStatus::Finished)
         {{-- After a match: every player decides; the rematch starts when all say yes --}}
@@ -274,10 +306,6 @@ new class extends Component
                     <i class="bi bi-arrow-repeat me-1"></i>{{ __('Play again?') }}
                 </button>
             @endif
-
-            <button type="button" class="btn btn-outline-danger rounded-0 ms-auto" wire:click="close" wire:confirm="{{ __('Close this room?') }}">
-                {{ __('Close room') }}
-            </button>
         </div>
     @elseif ($room->status === RoomStatus::Closed && $this->match)
         <p class="text-white-50 mb-3"><i class="bi bi-door-closed me-1"></i>{{ __('This room is closed.') }}</p>

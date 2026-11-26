@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class GameMatch extends Model
 {
-    protected $fillable = ['room_id', 'status', 'state', 'winner_id', 'rematch_votes', 'started_at', 'finished_at'];
+    protected $fillable = ['room_id', 'status', 'state', 'winner_id', 'forfeited_by', 'rematch_votes', 'started_at', 'finished_at'];
 
     protected $attributes = [
         'status' => 'playing',
@@ -45,7 +45,13 @@ class GameMatch extends Model
 
     public function isDraw(): bool
     {
-        return $this->status === MatchStatus::Finished && $this->winner_id === null;
+        return $this->status === MatchStatus::Finished && $this->winner_id === null && $this->forfeited_by === null;
+    }
+
+    /** Ended because a player left mid-game. */
+    public function wasForfeited(): bool
+    {
+        return $this->forfeited_by !== null;
     }
 
     /** @return list<int> user ids who asked for a rematch */

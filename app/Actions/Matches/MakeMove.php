@@ -8,6 +8,7 @@ use App\Enums\RoomStatus;
 use App\Games\GameRegistry;
 use App\Games\InvalidMove;
 use App\Models\GameMatch;
+use App\Models\Room;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -18,13 +19,14 @@ class MakeMove extends RoomAction
 
     /**
      * Validate a move with the game's engine and save the new state.
-     * The match row is locked so two simultaneous clicks can't both be applied.
+     * Rows are locked so two simultaneous clicks (or a click and a forfeit) can't both be applied.
+     * Lock order is always room → match (same as CloseRoom / StartMatch) to avoid deadlocks.
      */
     public function handle(GameMatch $match, User $player, array $move): GameMatch
     {
         return DB::transaction(function () use ($match, $player, $move) {
+            $room = Room::whereKey($match->room_id)->lockForUpdate()->firstOrFail();
             $match = GameMatch::whereKey($match->id)->lockForUpdate()->firstOrFail();
-            $room = $match->room;
 
             if (! $room->hasPlayer($player)) {
                 throw new AuthorizationException();

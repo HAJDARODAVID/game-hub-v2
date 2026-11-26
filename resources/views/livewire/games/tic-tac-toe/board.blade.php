@@ -85,6 +85,14 @@ new class extends Component
         <span class="ttt-status @if ($myTurn) ttt-status--mine @endif">
             @if ($match->isPlaying())
                 {{ $myTurn ? __('Your turn') : __('Waiting for :name', ['name' => $turnName]) }}
+            @elseif ($match->wasForfeited())
+                @if ($match->forfeited_by === auth()->id())
+                    {{ __('You left the game') }}
+                @elseif ($match->winner_id === auth()->id())
+                    <i class="bi bi-trophy-fill me-1"></i>{{ __(':name left the game — you win!', ['name' => $this->names[$match->forfeited_by] ?? '']) }}
+                @else
+                    {{ __(':name left the game', ['name' => $this->names[$match->forfeited_by] ?? '']) }}
+                @endif
             @elseif ($match->isDraw())
                 {{ __("It's a draw") }}
             @elseif ($match->winner_id === auth()->id())

@@ -29,7 +29,7 @@
             @yield('content')
         </main>
 
-        <x-footer.phone-footer />
+        <x-footer.app-footer />
     </div>
 </body>
 </html>

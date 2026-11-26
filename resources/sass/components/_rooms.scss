@@ -39,3 +39,8 @@
         border-left-color: $gh-orange;
     }
 }
+
+// Door icon in the room header: close / leave the room, or leave the game
+.room-exit-btn {
+    flex-shrink: 0;
+}

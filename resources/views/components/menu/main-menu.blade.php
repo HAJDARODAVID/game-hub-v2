@@ -12,10 +12,8 @@
 
 <div class="collapse navbar-collapse" id="mainMenu">
     {{-- Desktop: dropdown under the gamertag --}}
+    {{-- (The invites badge lives in the footer, which is shown on every screen size.) --}}
     <ul class="navbar-nav ms-auto d-none d-md-flex align-items-center">
-        <li class="nav-item me-1">
-            <livewire:invites.badge link-class="nav-link text-white" />
-        </li>
         <li class="nav-item dropdown">
             <a id="userDropdown" class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ Auth::user()->username }}

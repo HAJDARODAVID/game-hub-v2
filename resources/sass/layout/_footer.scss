@@ -1,8 +1,40 @@
-// Phone footer (components/footer/phone-footer)
+// App footer (components/footer/app-footer), shown on every screen size
 
-// Keep page content clear of the fixed phone footer
-@include media-breakpoint-down(md) {
-    .app-body main {
-        padding-bottom: 4.5rem !important;
+// Keep page content clear of the fixed footer
+.app-body main {
+    padding-bottom: 4.5rem !important;
+}
+
+// "Back to your game" button (livewire/matches/active-button)
+.active-match-btn {
+    position: relative;
+    color: $gh-orange;
+
+    &:hover,
+    &:focus {
+        color: $gh-orange;
+    }
+
+    // Small pulsing dot: a match is waiting for you
+    &__dot {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background-color: $gh-orange;
+        animation: active-match-pulse 1.5s ease-in-out infinite;
+    }
+}
+
+@keyframes active-match-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .active-match-btn__dot {
+        animation: none;
     }
 }

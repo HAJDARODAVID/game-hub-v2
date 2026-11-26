@@ -266,17 +266,98 @@ class MatchesTest extends TestCase
         $this->assertSame(RoomStatus::Playing, $room->fresh()->status);
     }
 
-    public function test_host_can_close_after_a_match_but_not_during(): void
+    public function test_leaving_mid_game_gives_the_opponent_the_win_and_closes_the_room(): void
+    {
+        $room = $this->fullRoom();
+        $match = app(StartMatch::class)->handle($room, $this->host);
+        $this->move($match, $this->host, 4);
+
+        app(CloseRoom::class)->handle($room, $this->friend);    // friend gives up
+
+        $match->refresh();
+        $this->assertSame(MatchStatus::Finished, $match->status);
+        $this->assertSame($this->host->id, $match->winner_id);
+        $this->assertSame($this->friend->id, $match->forfeited_by);
+        $this->assertTrue($match->wasForfeited());
+        $this->assertFalse($match->isDraw());
+        $this->assertSame(RoomStatus::Closed, $room->fresh()->status);
+    }
+
+    public function test_host_leaving_mid_game_also_forfeits(): void
+    {
+        $room = $this->fullRoom();
+        $match = app(StartMatch::class)->handle($room, $this->host);
+
+        app(CloseRoom::class)->handle($room, $this->host);
+
+        $this->assertSame($this->friend->id, $match->fresh()->winner_id);
+        $this->assertSame(RoomStatus::Closed, $room->fresh()->status);
+    }
+
+    public function test_no_moves_after_a_forfeit(): void
+    {
+        $room = $this->fullRoom();
+        $match = app(StartMatch::class)->handle($room, $this->host);
+        app(CloseRoom::class)->handle($room, $this->friend);
+
+        $this->expectException(ValidationException::class);
+        $this->move($match, $this->host, 0);
+    }
+
+    public function test_outsiders_cannot_close_a_running_game(): void
     {
         $room = $this->fullRoom();
         app(StartMatch::class)->handle($room, $this->host);
 
-        try {
-            app(CloseRoom::class)->handle($room->fresh(), $this->host);
-            $this->fail('Expected a validation error.');
-        } catch (ValidationException) {
-            $this->assertSame(RoomStatus::Playing, $room->fresh()->status);
+        $this->expectException(AuthorizationException::class);
+        app(CloseRoom::class)->handle($room, User::factory()->create());
+    }
+
+    public function test_exit_icon_leaves_the_game_and_the_opponent_sees_the_win(): void
+    {
+        $room = $this->fullRoom();
+        $match = app(StartMatch::class)->handle($room, $this->host);
+
+        Livewire::actingAs($this->friend)
+            ->test('rooms.show', ['room' => $room->fresh()])
+            ->assertSeeHtml('room-exit-btn')
+            ->assertSee('Leave game')
+            ->assertSee('host wins and the room closes')
+            ->call('close')
+            ->assertRedirect(route('games.lobby', $this->game));
+
+        Livewire::actingAs($this->host)
+            ->test('games.tic-tac-toe.board', ['match' => $match->fresh()])
+            ->assertSee('friend left the game — you win!');
+
+        Livewire::actingAs($this->friend)
+            ->test('games.tic-tac-toe.board', ['match' => $match->fresh()])
+            ->assertSee('You left the game');
+
+        // Closed room: no exit icon any more
+        Livewire::actingAs($this->host)
+            ->test('rooms.show', ['room' => $room->fresh()])
+            ->assertDontSeeHtml('room-exit-btn')
+            ->assertSee('This room is closed.');
+    }
+
+    public function test_exit_icon_is_there_in_every_open_state(): void
+    {
+        $room = $this->fullRoom();
+
+        // Waiting: host closes, guest leaves
+        Livewire::actingAs($this->host)->test('rooms.show', ['room' => $room])->assertSeeHtml('room-exit-btn')->assertSee('Close room');
+        Livewire::actingAs($this->friend)->test('rooms.show', ['room' => $room])->assertSeeHtml('room-exit-btn')->assertSee('Leave room');
+
+        // Playing
+        $match = app(StartMatch::class)->handle($room, $this->host);
+        Livewire::actingAs($this->host)->test('rooms.show', ['room' => $room->fresh()])->assertSee('Leave game');
+
+        // Finished
+        foreach ([0, 3, 1, 4, 2] as $i => $cell) {
+            $this->move($match, $i % 2 === 0 ? $this->host : $this->friend, $cell);
         }
+        Livewire::actingAs($this->friend)->test('rooms.show', ['room' => $room->fresh()])->assertSeeHtml('room-exit-btn')->assertSee('Close room');
     }
 
     // ---- Livewire ---------------------------------------------------------

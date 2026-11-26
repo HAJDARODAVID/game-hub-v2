@@ -86,6 +86,14 @@ class Room extends Model
         });
     }
 
+    /** Rooms where this user is seated and a match is being played right now. */
+    #[Scope]
+    protected function playingWith(Builder $query, User $user): void
+    {
+        $query->where('status', RoomStatus::Playing)
+            ->whereHas('players', fn (Builder $p) => $p->where('user_id', $user->id));
+    }
+
     /** Live rooms first, then history; newest first within each group. */
     #[Scope]
     protected function openFirst(Builder $query): void
