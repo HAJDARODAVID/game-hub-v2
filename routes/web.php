@@ -12,4 +12,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/games/{game}', [GameController::class, 'lobby'])->name('games.lobby');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
+    Route::view('/invites', 'invites.index')->name('invites.index');
 });

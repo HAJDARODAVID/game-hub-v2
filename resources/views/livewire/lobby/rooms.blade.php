@@ -58,6 +58,7 @@ new class extends Component
 
         app(RespondToInvite::class)->decline(RoomInvite::findOrFail($inviteId), Auth::user());
         unset($this->rooms);
+        $this->dispatch('invites-changed');
     }
 };
 ?>

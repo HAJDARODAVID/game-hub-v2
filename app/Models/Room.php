@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Room extends Model
 {
@@ -56,6 +57,17 @@ class Room extends Model
     public function invites(): HasMany
     {
         return $this->hasMany(RoomInvite::class);
+    }
+
+    public function matches(): HasMany
+    {
+        return $this->hasMany(GameMatch::class);
+    }
+
+    /** The current or most recent match. */
+    public function latestMatch(): HasOne
+    {
+        return $this->hasOne(GameMatch::class)->latestOfMany();
     }
 
     /**

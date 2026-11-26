@@ -49,3 +49,15 @@
         background-color: $dark;
     }
 }
+
+// Pending-invites badge (livewire/invites/badge), used in the navbar and the phone footer
+.invites-badge__count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(35%, -25%);
+    padding: .2em .45em;
+    font-size: .65rem;
+    background-color: $gh-orange;
+    color: $black;
+}

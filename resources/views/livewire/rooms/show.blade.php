@@ -1,16 +1,20 @@
 <?php
 
+use App\Actions\Matches\RequestRematch;
+use App\Actions\Matches\StartMatch;
 use App\Actions\Rooms\CancelInvite;
 use App\Actions\Rooms\CloseRoom;
 use App\Actions\Rooms\InvitePlayer;
 use App\Actions\Rooms\LeaveRoom;
 use App\Actions\Rooms\RespondToInvite;
 use App\Enums\RoomStatus;
+use App\Games\GameRegistry;
 use App\Models\Room;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 new class extends Component
@@ -59,6 +63,80 @@ new class extends Component
     public function seatsLeft(): int
     {
         return max(0, $this->room->game->max_players - $this->players->count() - $this->pendingInvites->count());
+    }
+
+    /** The current or last match, shown as the game board. */
+    #[Computed]
+    public function match()
+    {
+        return $this->room->latestMatch()->first();
+    }
+
+    /** Livewire component that draws this game's board, or null if the game has no engine yet. */
+    #[Computed]
+    public function boardComponent(): ?string
+    {
+        $games = app(GameRegistry::class);
+
+        return $games->has($this->room->game) ? $games->for($this->room->game)->boardComponent() : null;
+    }
+
+    /** Host can start the first match of a waiting room. */
+    #[Computed]
+    public function canStart(): bool
+    {
+        return $this->isHost
+            && $this->room->status === RoomStatus::Waiting
+            && $this->players->count() >= $this->room->game->min_players
+            && $this->boardComponent !== null;
+    }
+
+    /**
+     * After a match: who asked to play again, and who we're still waiting for.
+     *
+     * @return array{iVoted: bool, askedBy: list<string>, waitingFor: list<string>}
+     */
+    #[Computed]
+    public function rematch(): array
+    {
+        $votes = $this->match?->rematchVotes() ?? [];
+        $me = Auth::id();
+        $others = $this->players->reject(fn ($p) => $p->user_id === $me);
+
+        return [
+            'iVoted' => in_array($me, $votes, true),
+            'askedBy' => $others->filter(fn ($p) => in_array($p->user_id, $votes, true))->map(fn ($p) => $p->user->username)->values()->all(),
+            'waitingFor' => $others->reject(fn ($p) => in_array($p->user_id, $votes, true))->map(fn ($p) => $p->user->username)->values()->all(),
+        ];
+    }
+
+    public function startGame(): void
+    {
+        $this->resetErrorBag();
+
+        app(StartMatch::class)->handle($this->room, Auth::user());
+
+        $this->room->refresh();
+        unset($this->match, $this->pendingInvites, $this->canStart);
+    }
+
+    /** "Play again?" / "Yes!": the rematch starts once every player has said yes. */
+    public function playAgain(): void
+    {
+        $this->resetErrorBag();
+
+        app(RequestRematch::class)->handle($this->room, Auth::user());
+
+        $this->room->refresh();
+        unset($this->match, $this->rematch);
+    }
+
+    /** Dispatched by the board when a match ends. */
+    #[On('match-finished')]
+    public function matchFinished(): void
+    {
+        $this->room->refresh();
+        unset($this->match, $this->canStart, $this->rematch);
     }
 
     public function invite(): void
@@ -120,8 +198,8 @@ new class extends Component
 };
 ?>
 
-{{-- Polls while the room is live, until real-time updates (Reverb) are added --}}
-<div @if ($room->status->isOpen()) wire:poll.5s @endif>
+{{-- Polls until the room is closed (players may wait for a rematch), until real-time updates (Reverb) are added --}}
+<div @if ($room->status !== RoomStatus::Closed) wire:poll.5s @endif>
     <div class="d-flex align-items-center gap-3 mb-3">
         <a href="{{ route('games.lobby', $room->game) }}" class="btn btn-dark btn-sm" aria-label="{{ __('Back to lobby') }}">
             <i class="bi bi-arrow-left"></i>
@@ -152,6 +230,66 @@ new class extends Component
         </div>
     @endif
 
+    {{-- Room controls (above the game board) --}}
+    @if ($room->status === RoomStatus::Waiting && ! $this->myInvite)
+        {{-- Waiting room: host starts, others can leave --}}
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            @if ($this->isHost)
+                <button type="button" class="btn btn-gh-orange" wire:click="startGame" wire:loading.attr="disabled" wire:target="startGame" @disabled(! $this->canStart)>
+                    <i class="bi bi-play-fill me-1"></i>{{ __('Start game') }}
+                </button>
+                @unless ($this->canStart)
+                    <small class="text-white-50">
+                        {{ $this->boardComponent ? __('Waiting for players: :count needed.', ['count' => $room->game->min_players]) : __("This game can't be played yet.") }}
+                    </small>
+                @endunless
+                <button type="button" class="btn btn-outline-danger rounded-0 ms-auto" wire:click="close" wire:confirm="{{ __('Close this room? Pending invites will be cancelled.') }}">
+                    {{ __('Close room') }}
+                </button>
+            @else
+                <button type="button" class="btn btn-outline-light rounded-0 ms-auto" wire:click="leave" wire:confirm="{{ __('Leave this room?') }}">
+                    {{ __('Leave room') }}
+                </button>
+            @endif
+        </div>
+    @elseif ($room->status === RoomStatus::Finished)
+        {{-- After a match: every player decides; the rematch starts when all say yes --}}
+        @php($rematch = $this->rematch)
+        <div class="rematch-bar d-flex flex-wrap align-items-center gap-2 mb-3 @if ($rematch['askedBy'] && ! $rematch['iVoted']) rematch-bar--asked @endif">
+            @if ($rematch['iVoted'])
+                <span class="text-white-50">
+                    <span class="spinner-grow spinner-grow-sm me-1" aria-hidden="true"></span>
+                    {{ __('Waiting for :names to answer…', ['names' => implode(', ', $rematch['waitingFor'])]) }}
+                </span>
+            @elseif ($rematch['askedBy'])
+                <span class="text-white">
+                    <i class="bi bi-arrow-repeat me-1"></i>
+                    {{ __(':names wants a rematch!', ['names' => implode(', ', $rematch['askedBy'])]) }}
+                </span>
+                <button type="button" class="btn btn-gh-orange" wire:click="playAgain" wire:loading.attr="disabled" wire:target="playAgain">
+                    {{ __('Yes!') }}
+                </button>
+            @else
+                <button type="button" class="btn btn-gh-orange" wire:click="playAgain" wire:loading.attr="disabled" wire:target="playAgain">
+                    <i class="bi bi-arrow-repeat me-1"></i>{{ __('Play again?') }}
+                </button>
+            @endif
+
+            <button type="button" class="btn btn-outline-danger rounded-0 ms-auto" wire:click="close" wire:confirm="{{ __('Close this room?') }}">
+                {{ __('Close room') }}
+            </button>
+        </div>
+    @elseif ($room->status === RoomStatus::Closed && $this->match)
+        <p class="text-white-50 mb-3"><i class="bi bi-door-closed me-1"></i>{{ __('This room is closed.') }}</p>
+    @endif
+
+    {{-- Game board for the current / last match --}}
+    @if ($this->match && $this->boardComponent)
+        <livewire:is :component="$this->boardComponent" :match="$this->match" :key="'match-' . $this->match->id" />
+    @endif
+
+    {{-- Waiting room only: once a match exists, the board shows the players and invites are closed --}}
+    @unless ($this->match)
     <div class="row g-3">
         {{-- Players --}}
         <div class="col-md-6">
@@ -216,22 +354,5 @@ new class extends Component
             </div>
         @endif
     </div>
-
-    {{-- Room controls --}}
-    @if ($room->status === RoomStatus::Waiting && ! $this->myInvite)
-        <div class="d-flex flex-wrap gap-2 mt-3">
-            @if ($this->isHost)
-                <button type="button" class="btn btn-gh-orange" disabled title="{{ __('Coming with the game board') }}">
-                    <i class="bi bi-play-fill me-1"></i>{{ __('Start game') }}
-                </button>
-                <button type="button" class="btn btn-outline-danger rounded-0 ms-auto" wire:click="close" wire:confirm="{{ __('Close this room? Pending invites will be cancelled.') }}">
-                    {{ __('Close room') }}
-                </button>
-            @else
-                <button type="button" class="btn btn-outline-light rounded-0 ms-auto" wire:click="leave" wire:confirm="{{ __('Leave this room?') }}">
-                    {{ __('Leave room') }}
-                </button>
-            @endif
-        </div>
-    @endif
+    @endunless
 </div>
