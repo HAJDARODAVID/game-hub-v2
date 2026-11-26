@@ -1,16 +1,17 @@
 {{-- Polls until real-time updates (Reverb) are added --}}
 <div class="d-flex flex-column gap-3" wire:poll.10s>
-    {{-- Header: game info + create room --}}
-    <div class="d-flex flex-wrap align-items-center gap-3">
-        <a href="{{ route('home') }}" class="btn btn-dark btn-sm" aria-label="{{ __('Back to catalogue') }}">
+    {{-- Header on one row: back · title + description (truncated if needed) · create room --}}
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('home') }}" class="btn btn-dark btn-sm flex-shrink-0" aria-label="{{ __('Back to catalogue') }}">
             <i class="bi bi-arrow-left"></i>
         </a>
-        <div class="flex-grow-1 min-w-0">
-            <h1 class="h4 text-white mb-0">{{ $game->title }}</h1>
-            <small class="text-white-50">{{ $game->description }} · {{ $game->players_label }}</small>
+        <div class="d-flex align-items-baseline gap-2 flex-grow-1 min-w-0">
+            {{-- <h1 class="h4 text-white mb-0 text-nowrap">{{ $game->title }}</h1>
+            <small class="text-white-50 text-truncate" title="{{ $game->description }} · {{ $game->players_label }}">{{ $game->description }} · {{ $game->players_label }}</small> --}}
         </div>
-        <button type="button" class="btn btn-gh-orange" wire:click="create" wire:loading.attr="disabled" wire:target="create">
-            <i class="bi bi-plus-lg me-1"></i>{{ __('Create room') }}
+        <button type="button" class="btn btn-gh-orange flex-shrink-0" wire:click="create" wire:loading.attr="disabled" wire:target="create"
+            title="{{ __('Create room') }}" aria-label="{{ __('Create room') }}">
+            <i class="bi bi-plus-lg"></i>
         </button>
     </div>
 
