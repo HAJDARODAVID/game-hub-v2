@@ -44,3 +44,28 @@
 .room-exit-btn {
     flex-shrink: 0;
 }
+
+// Lobby statistics tiles (livewire/lobby/rooms)
+.stat-tile {
+    padding: .75rem .25rem;
+    background-color: $gh-card-header;
+
+    &__value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.1;
+        color: $white;
+
+        &--win {
+            color: $gh-orange;
+        }
+    }
+
+    &__label {
+        margin-top: .25rem;
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: rgba($white, .6);
+    }
+}

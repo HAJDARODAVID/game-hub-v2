@@ -67,7 +67,7 @@ class InvitesTest extends TestCase
         $this->assertSame(0, RoomInvite::pendingFor($this->me)->count());
 
         Livewire::actingAs($this->me)
-            ->test('invites.list')
+            ->test('invites.invite-list')
             ->assertSee('No pending invites.')
             ->assertDontSee('Declined room')
             ->assertDontSee('Closed room');
@@ -78,7 +78,7 @@ class InvitesTest extends TestCase
         $invite = $this->inviteMe($this->alice, $this->ticTacToe, 'Alice table');
 
         Livewire::actingAs($this->me)
-            ->test('invites.list')
+            ->test('invites.invite-list')
             ->call('accept', $invite->id)
             ->assertRedirect(route('rooms.show', $invite->room_id));
 
@@ -90,7 +90,7 @@ class InvitesTest extends TestCase
         $invite = $this->inviteMe($this->alice, $this->ticTacToe, 'Alice table');
 
         Livewire::actingAs($this->me)
-            ->test('invites.list')
+            ->test('invites.invite-list')
             ->assertSee('Alice table')
             ->call('decline', $invite->id)
             ->assertDontSee('Alice table')
@@ -102,7 +102,7 @@ class InvitesTest extends TestCase
         $invite = $this->inviteMe($this->alice, $this->ticTacToe, 'Alice table');
 
         Livewire::actingAs($this->bob)
-            ->test('invites.list')
+            ->test('invites.invite-list')
             ->call('accept', $invite->id)
             ->assertForbidden();
     }

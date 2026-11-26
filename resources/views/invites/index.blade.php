@@ -9,6 +9,6 @@
         <h1 class="h4 text-white mb-0">{{ __('My invites') }}</h1>
     </div>
 
-    <livewire:invites.list />
+    <livewire:invites.invite-list />
 </div>
 @endsection

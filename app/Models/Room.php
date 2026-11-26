@@ -94,18 +94,6 @@ class Room extends Model
             ->whereHas('players', fn (Builder $p) => $p->where('user_id', $user->id));
     }
 
-    /** Live rooms first, then history; newest first within each group. */
-    #[Scope]
-    protected function openFirst(Builder $query): void
-    {
-        $open = array_map(fn (RoomStatus $s) => $s->value, RoomStatus::open());
-
-        $query->orderByRaw(
-            'case when status in (' . implode(',', array_fill(0, count($open), '?')) . ') then 0 else 1 end',
-            $open
-        )->latest()->orderByDesc('id');
-    }
-
     public function isHost(User $user): bool
     {
         return $this->host_id === $user->id;
