@@ -22,6 +22,15 @@ class GameSeeder extends Seeder
                 'max_players' => 2,
                 'sort_order' => 10,
             ],
+            [
+                'slug' => 'toe-tac-tic',
+                'title' => 'ToeTacTic',
+                'description' => 'A 4×4 board where three in a row makes you lose. Force your opponent into it.',
+                'cover' => 'img/games/covers/toe-tac-tic.svg',
+                'min_players' => 2,
+                'max_players' => 2,
+                'sort_order' => 20,
+            ],
         ];
 
         foreach ($games as $game) {

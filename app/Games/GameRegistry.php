@@ -4,6 +4,7 @@ namespace App\Games;
 
 use App\Games\Contracts\GameEngine;
 use App\Games\TicTacToe\TicTacToeEngine;
+use App\Games\ToeTacTic\ToeTacTicEngine;
 use App\Models\Game;
 use InvalidArgumentException;
 
@@ -16,6 +17,7 @@ class GameRegistry
     /** @var array<string, class-string<GameEngine>> */
     private const ENGINES = [
         'tic-tac-toe' => TicTacToeEngine::class,
+        'toe-tac-tic' => ToeTacTicEngine::class,
     ];
 
     public function has(Game|string $game): bool

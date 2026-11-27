@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 140" role="img" aria-label="ToeTacTic">
+  <rect width="320" height="140" fill="#2e343a"/>
+  <!-- 4×4 grid: cells 26px, x 108–212, y 18–122 -->
+  <g stroke="#5a636c" stroke-width="4" stroke-linecap="round">
+    <line x1="134" y1="18" x2="134" y2="122"/>
+    <line x1="160" y1="18" x2="160" y2="122"/>
+    <line x1="186" y1="18" x2="186" y2="122"/>
+    <line x1="108" y1="44" x2="212" y2="44"/>
+    <line x1="108" y1="70" x2="212" y2="70"/>
+    <line x1="108" y1="96" x2="212" y2="96"/>
+  </g>
+  <!-- X: (0,0) (1,1) (2,2) — the losing line -->
+  <g stroke="#f7971e" stroke-width="5" stroke-linecap="round">
+    <line x1="114" y1="24" x2="128" y2="38"/><line x1="128" y1="24" x2="114" y2="38"/>
+    <line x1="140" y1="50" x2="154" y2="64"/><line x1="154" y1="50" x2="140" y2="64"/>
+    <line x1="166" y1="76" x2="180" y2="90"/><line x1="180" y1="76" x2="166" y2="90"/>
+    <line x1="192" y1="24" x2="206" y2="38"/><line x1="206" y1="24" x2="192" y2="38"/>
+  </g>
+  <!-- O -->
+  <g fill="none" stroke="#ffffff" stroke-width="4">
+    <circle cx="147" cy="31" r="7"/>
+    <circle cx="121" cy="83" r="7"/>
+    <circle cx="199" cy="57" r="7"/>
+    <circle cx="173" cy="109" r="7"/>
+  </g>
+  <line x1="112" y1="22" x2="182" y2="92" stroke="#dc3545" stroke-width="3" stroke-opacity=".8" stroke-linecap="round"/>
+  <!-- skull-ish "lose" mark -->
+  <text x="250" y="78" fill="#dc3545" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" text-anchor="middle">3 = ✗</text>
+</svg>
